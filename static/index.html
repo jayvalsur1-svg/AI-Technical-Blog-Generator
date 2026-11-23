@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog Studio — AI Technical Writing Workspace</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Highlight.js dark syntax highlighting theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
+  
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="theme-dark">
+  <div class="app-shell" id="appShell">
+    
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Collapsible Application Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-glyph" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="brand-details">
+            <span class="brand-title">Blog Studio</span>
+            <span class="brand-subtitle">AI Writing Workspace</span>
+          </div>
+        </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarCollapseBtn" title="Collapse sidebar (Ctrl+\)" aria-label="Collapse sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+            <path d="M9 3v18"/>
+            <path d="m14 9-3 3 3 3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-action">
+        <button type="button" class="btn-new-article" id="newArticleBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>New Article</span>
+          <kbd class="shortcut-key">⌘N</kbd>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-label">WORKSPACE</div>
+          <a href="#" class="nav-item active" id="navBlogGen" aria-current="page">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" x2="8" y1="13" y2="13"/>
+              <line x1="16" x2="8" y1="17" y2="17"/>
+              <line x1="10" x2="8" y1="9" y2="9"/>
+            </svg>
+            <span>Article Generator</span>
+            <span class="nav-active-pip"></span>
+          </a>
+        </div>
+
+        <div class="nav-group recent-articles-group">
+          <div class="nav-group-header">
+            <span class="nav-group-label">RECENT ARTICLES</span>
+            <button type="button" class="btn-text-subtle" id="clearHistoryBtn" title="Clear recent articles" aria-label="Clear recent articles">Clear</button>
+          </div>
+          <div class="recent-list" id="recentArticlesList">
+            <div class="recent-empty-state">
+              <span class="empty-bullet">•</span>
+              <span>No articles generated yet</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="connection-status-card" id="connectionCard">
+          <div class="status-indicator-row">
+            <span class="status-pulse-dot" id="statusPulseDot"></span>
+            <span class="status-headline" id="connectionText">Checking backend…</span>
+          </div>
+          <div class="status-detail-row">
+            <span class="status-badge" id="providerLabel">Connecting…</span>
+            <span class="status-badge status-badge-alt" id="researchBadge">Research Ready</span>
+          </div>
+        </div>
+        <div class="sidebar-tech-note">
+          <span>FastAPI · LangGraph Workflow</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <main class="main-workspace" id="mainWorkspace">
+      
+      <!-- Top Application Navigation Bar -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"/>
+              <line x1="4" x2="20" y1="6" y2="6"/>
+              <line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
+          </button>
+          <div class="breadcrumbs">
+            <span class="crumb-app">Blog Studio</span>
+            <span class="crumb-separator">/</span>
+            <span class="crumb-current">Technical Article Workspace</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="server-pill" id="serverPill" title="Backend Connection State">
+            <span class="pulse-dot-sm" id="topPulseDot"></span>
+            <span class="server-status-text" id="topStatusText">FastAPI Ready</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Scrollable Workspace Container -->
+      <div class="workspace-body">
+        
+        <!-- Welcome Hero Section -->
+        <section class="hero-section">
+          <div class="hero-content">
+            <div class="hero-eyebrow">
+              <span class="sparkle-icon">✦</span>
+              <span>MULTI-AGENT TECHNICAL JOURNALISM</span>
+            </div>
+            <h1 class="hero-heading">Create something worth reading.</h1>
+            <p class="hero-subtitle">Turn technical ideas into structured, research-backed articles.</p>
+          </div>
+          
+          <!-- Sample Topic Suggestions -->
+          <div class="topic-suggestions">
+            <span class="suggestions-label">Inspirations:</span>
+            <button type="button" class="suggestion-chip" data-topic="Building Production-Ready Multi-Agent Workflows with LangGraph and FastAPI">LangGraph Multi-Agent Architecture</button>
+            <button type="button" class="suggestion-chip" data-topic="Designing High-Throughput Event-Driven Microservices with Kafka and Go">Event-Driven Microservices</button>
+            <button type="button" class="suggestion-chip" data-topic="Modern RAG Systems: Combining Dense Embeddings with BM25 Hybrid Search and Re-Ranking">Advanced Hybrid RAG</button>
+            <button type="button" class="suggestion-chip" data-topic="Distributed Caching Patterns: Cache-Aside, Write-Through, and Stampede Protection">Distributed Caching Patterns</button>
+          </div>
+        </section>
+
+        <!-- Creation & Orchestration Grid -->
+        <div class="orchestration-layout">
+          
+          <!-- Input Configuration Panel -->
+          <section class="studio-card input-card">
+            <div class="card-header">
+              <div class="step-badge-row">
+                <span class="step-num">01</span>
+                <h2 class="card-title">Article Configuration</h2>
+              </div>
+              <div class="char-counter-wrap">
+                <span id="charCount" class="char-count">0</span>
+                <span class="char-limit">/ 500</span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="topic" class="input-label">
+                <span>Topic or thesis statement</span>
+                <button type="button" class="btn-clear-input" id="clearTopicBtn" title="Clear topic" style="display: none;">Clear</button>
+              </label>
+              <div class="textarea-wrapper">
+                <textarea 
+                  id="topic" 
+                  rows="4" 
+                  placeholder="e.g. Building production-ready multi-agent systems with LangGraph and FastAPI: architecture patterns, error recovery, and concurrency controls..."
+                  maxlength="500"
+                  spellcheck="false"
+                ></textarea>
+              </div>
+              <p class="input-hint">Be specific about the technology stack, architectural angle, or target audience for best results.</p>
+            </div>
+
+            <!-- Configuration Row -->
+            <div class="config-grid">
+              <!-- Research Toggle -->
+              <div class="config-cell toggle-cell">
+                <div class="toggle-info">
+                  <div class="toggle-title-row">
+                    <span class="toggle-name">Web Research</span>
+                    <span class="toggle-provider-tag" id="researchProviderTag">Tavily Engine</span>
+                  </div>
+                  <span class="toggle-description" id="researchDesc">Live search for fresh technical evidence, benchmarks & verified citations.</span>
+                </div>
+                <label class="switch-container">
+                  <input type="checkbox" id="research" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <!-- Concurrency Readout -->
+              <div class="config-cell concurrency-cell">
+                <div class="concurrency-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                </div>
+                <div class="concurrency-details">
+                  <span class="concurrency-title">Parallel Worker Concurrency</span>
+                  <span class="concurrency-value" id="workersInfo">Configured on backend (FastAPI executor)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div class="error-banner" id="errorBanner" style="display: none;">
+              <div class="error-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" x2="12" y1="8" y2="12"/>
+                  <line x1="12" x2="12.01" y1="16" y2="16"/>
+                </svg>
+              </div>
+              <div class="error-text" id="errorBannerText">An error occurred during generation.</div>
+              <button type="button" class="btn-dismiss-error" id="dismissErrorBtn" aria-label="Dismiss error">×</button>
+            </div>
+
+            <!-- Generate Action -->
+            <div class="action-footer">
+              <button type="button" id="generateBtn" class="btn-generate">
+                <span class="btn-spinner" id="btnSpinner" style="display: none;"></span>
+                <svg class="btn-icon" id="btnIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m5 12 7-7 7 7"/>
+                  <path d="M12 19V5"/>
+                </svg>
+                <span id="generateBtnText">Generate Article</span>
+              </button>
+              <div class="action-meta">
+                <span>Free-tier friendly · Rate-limit safe with exponential backoff</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Generation Pipeline Tracker -->
+          <section class="studio-card pipeline-card" id="pipelineCard">
+            <div class="card-header">
+              <div class="step-badge-row">
+                <span class="step-num">02</span>
+                <h2 class="card-title">LangGraph Pipeline</h2>
+              </div>
+              <div class="pipeline-timer" id="pipelineTimerWrap" style="display: none;">
+                <span class="timer-dot"></span>
+                <span id="elapsedTime">00:00</span>
+              </div>
+            </div>
+
+            <!-- Pipeline Flow Stages -->
+            <div class="pipeline-list">
+              <!-- Stage 1: Router -->
+              <div class="stage-item" data-stage="router" id="stage-router">
+                <div class="stage-indicator">
+                  <div class="stage-state-icon state-waiting">
+                    <span class="stage-num-label">1</span>
+                  </div>
+                  <div class="stage-connector"></div>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-headline">
+                    <span class="stage-name">Router</span>
+                    <span class="stage-badge" id="badge-router">WAITING</span>
+                  </div>
+                  <span class="stage-description">Analyze topic & determine research strategy</span>
+                </div>
+              </div>
+
+              <!-- Stage 2: Research -->
+              <div class="stage-item" data-stage="research" id="stage-research">
+                <div class="stage-indicator">
+                  <div class="stage-state-icon state-waiting">
+                    <span class="stage-num-label">2</span>
+                  </div>
+                  <div class="stage-connector"></div>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-headline">
+                    <span class="stage-name">Research</span>
+                    <span class="stage-badge" id="badge-research">WAITING</span>
+                  </div>
+                  <span class="stage-description">Gather factual sources & citations via Tavily</span>
+                </div>
+              </div>
+
+              <!-- Stage 3: Planner -->
+              <div class="stage-item" data-stage="planner" id="stage-planner">
+                <div class="stage-indicator">
+                  <div class="stage-state-icon state-waiting">
+                    <span class="stage-num-label">3</span>
+                  </div>
+                  <div class="stage-connector"></div>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-headline">
+                    <span class="stage-name">Planner</span>
+                    <span class="stage-badge" id="badge-planner">WAITING</span>
+                  </div>
+                  <span class="stage-description">Architect structured section goals & outline</span>
+                </div>
+              </div>
+
+              <!-- Stage 4: Parallel Workers -->
+              <div class="stage-item" data-stage="worker" id="stage-worker">
+                <div class="stage-indicator">
+                  <div class="stage-state-icon state-waiting">
+                    <span class="stage-num-label">4</span>
+                  </div>
+                  <div class="stage-connector"></div>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-headline">
+                    <span class="stage-name">Parallel Workers</span>
+                    <span class="stage-badge" id="badge-worker">WAITING</span>
+                  </div>
+                  <span class="stage-description">Draft technical sections concurrently with code</span>
+                </div>
+              </div>
+
+              <!-- Stage 5: Reducer -->
+              <div class="stage-item" data-stage="reducer" id="stage-reducer">
+                <div class="stage-indicator">
+                  <div class="stage-state-icon state-waiting">
+                    <span class="stage-num-label">5</span>
+                  </div>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-headline">
+                    <span class="stage-name">Reducer</span>
+                    <span class="stage-badge" id="badge-reducer">WAITING</span>
+                  </div>
+                  <span class="stage-description">Synthesize, order & finalize Markdown document</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress Meter -->
+            <div class="pipeline-progress-container">
+              <div class="progress-info-row">
+                <span class="progress-label" id="progressText">Ready when you are</span>
+                <span class="progress-percentage" id="progressPct">0%</span>
+              </div>
+              <div class="progress-track-bg">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Markdown Document Studio & Preview (Highest Priority) -->
+        <section class="studio-card document-card" id="documentCard">
+          
+          <!-- Document Header & Toolbar -->
+          <div class="document-toolbar">
+            <div class="toolbar-left">
+              <div class="step-badge-row">
+                <span class="step-num">03</span>
+                <h2 class="card-title">Generated Article</h2>
+              </div>
+              
+              <!-- Tab View Switcher -->
+              <div class="view-tab-group" id="viewTabs" role="tablist">
+                <button type="button" class="tab-btn active" id="tabPreview" role="tab" aria-selected="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <span>Preview</span>
+                </button>
+                <button type="button" class="tab-btn" id="tabSource" role="tab" aria-selected="false">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                  </svg>
+                  <span>Markdown Source</span>
+                </button>
+              </div>
+
+              <!-- Reading Statistics Pill -->
+              <div class="reading-stats-pill" id="readingStatsPill" style="display: none;">
+                <span id="readingTime">0 min read</span>
+                <span class="stats-separator">·</span>
+                <span id="wordCount">0 words</span>
+              </div>
+            </div>
+
+            <!-- Toolbar Action Buttons -->
+            <div class="toolbar-right">
+              <button type="button" class="btn-tool" id="copyBtn" disabled title="Copy Markdown to clipboard">
+                <svg class="tool-icon default-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+                <svg class="tool-icon success-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span class="tool-text" id="copyBtnText">Copy</span>
+              </button>
+
+              <button type="button" class="btn-tool" id="downloadBtn" disabled title="Download formatted Markdown (.md)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" x2="12" y1="15" y2="3"/>
+                </svg>
+                <span class="tool-text">Download .md</span>
+              </button>
+
+              <button type="button" class="btn-tool" id="fullscreenBtn" disabled title="Enter distraction-free reading mode">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+                  <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+                </svg>
+                <span class="tool-text">Fullscreen</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Document Content Area -->
+          <div class="document-content-viewport" id="docViewport">
+            
+            <!-- Empty State -->
+            <div class="document-empty-state" id="emptyState">
+              <div class="empty-icon-shield">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" x2="12" y1="18" y2="12"/>
+                  <line x1="9" x2="15" y1="15" y2="15"/>
+                </svg>
+              </div>
+              <h3 class="empty-state-title">Your generated article will appear here</h3>
+              <p class="empty-state-desc">Enter a technical topic above, configure research options, and click Generate Article to begin.</p>
+              <div class="empty-state-tips">
+                <span class="tip-item">✦ Structured Markdown typography</span>
+                <span class="tip-item">✦ Syntax-highlighted code blocks</span>
+                <span class="tip-item">✦ Copy, export & distraction-free reading</span>
+              </div>
+            </div>
+
+            <!-- Formatted Markdown Render View -->
+            <article class="markdown-prose-container" id="renderedOutput" style="display: none;" tabindex="0"></article>
+
+            <!-- Raw Markdown Source View -->
+            <div class="markdown-source-container" id="sourceOutput" style="display: none;">
+              <div class="source-header-meta">
+                <span class="source-mode-badge">RAW MARKDOWN</span>
+                <button type="button" class="btn-text-subtle" id="selectAllSourceBtn">Select All</button>
+              </div>
+              <textarea class="source-raw-textarea" id="sourceTextarea" readonly spellcheck="false"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Application Footer -->
+        <footer class="app-footer">
+          <div class="footer-left">
+            <span>AI Blog Studio</span>
+            <span class="footer-dot">·</span>
+            <span>Local-first architecture served directly by FastAPI</span>
+          </div>
+          <div class="footer-right">
+            <span>Strict zero-drift backend contract</span>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- Fullscreen Distraction-Free Modal Container -->
+  <div class="fullscreen-overlay" id="fullscreenOverlay" style="display: none;">
+    <div class="fullscreen-topbar">
+      <div class="fs-title-col">
+        <span class="fs-badge">READING STUDIO</span>
+        <h2 class="fs-article-title" id="fsArticleTitle">Generated Article</h2>
+      </div>
+      <div class="fs-actions-col">
+        <div class="fs-stats" id="fsStats">0 words</div>
+        <button type="button" class="btn-tool" id="fsCopyBtn" title="Copy Markdown">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+          </svg>
+          <span>Copy</span>
+        </button>
+        <button type="button" class="btn-tool" id="fsDownloadBtn" title="Download .md">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" x2="12" y1="15" y2="3"/>
+          </svg>
+          <span>Download</span>
+        </button>
+        <button type="button" class="btn-tool btn-tool-primary" id="exitFullscreenBtn" title="Exit fullscreen (Esc)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" x2="6" y1="6" y2="18"/>
+            <line x1="6" x2="18" y1="6" y2="18"/>
+          </svg>
+          <span>Exit Fullscreen</span>
+          <kbd class="shortcut-key">Esc</kbd>
+        </button>
+      </div>
+    </div>
+    <div class="fullscreen-reading-pane" id="fsReadingPane">
+      <article class="markdown-prose-container" id="fsRenderedContent"></article>
+    </div>
+  </div>
+
+  <!-- Toast Notification Stack -->
+  <div class="toast-stack" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Third-party Client Libraries -->
+  <!-- Marked for GFM Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+  <!-- DOMPurify for strict sanitization -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <!-- Highlight.js for code syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  
+  <!-- Studio Application Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
